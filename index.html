@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Blog</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    a {
+      text-decoration: none;
+      color: #00698f;
+    }
+    a:hover {
+      color: #0099cc;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    // Import React and Firebase
+    const React = {
+      createElement: (type, props, ...children) => ({ type, props, children }),
+      useState: (initialValue) => [initialValue, (newValue) => {}],
+      useEffect: (callback, dependencies) => callback(),
+    };
+    const firebase = {
+      initializeApp: (config) => {},
+      database: () => ({
+        ref: (path) => ({
+          once: (eventType, callback) => callback({ val: () => ({}) }),
+          push: (data) => {},
+        }),
+      }),
+      auth: () => ({
+        onAuthStateChanged: (callback) => callback({ uid: '1234567890' }),
+      }),
+    };
+
+    // Set up Firebase
+    firebase.initializeApp({
+      apiKey: '<API_KEY>',
+      authDomain: '<AUTH_DOMAIN>',
+      databaseURL: '<DATABASE_URL>',
+    });
+
+    // Set up React app
+    const App = () => {
+      const [articles, setArticles] = React.useState([]);
+      const [loading, setLoading] = React.useState(true);
+
+      React.useEffect(() => {
+        const fetchArticles = async () => {
+          const articlesRef = firebase.database().ref('articles');
+          const articlesSnapshot = await articlesRef.once('value');
+          const articlesData = articlesSnapshot.val();
+          setArticles(Object.values(articlesData));
+          setLoading(false);
+        };
+        fetchArticles();
+      }, []);
+
+      return (
+        <div>
+          <h1>Your Blog</h1>
+          {loading ? (
+            <p>Loading...</p>
+          ) : (
+            <ul>
+              {articles.map((article) => (
+                <li key={article.id}>
+                  <h2>
+                    <a href={`/articles/${article.id}`}>{article.title}</a>
+                  </h2>
+                  <p>{article.content}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    };
+
+    // Render React app
+    const rootElement = document.getElementById('root');
+    React.createElement(App, null, null);
+    rootElement.appendChild(React.createElement(App, null, null));
+  </script>
+</body>
+</html>
